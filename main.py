@@ -1,8 +1,28 @@
-from datetime import datetime
+from fastapi import FastAPI
+from pydantic import BaseModel
+import asyncio
+from mti_engine import OperationalCognitiveOrchestrator
 
-def hello():
-    return f"MTI Engine initialisé : {datetime.now()}"
+app = FastAPI()
 
+# On crée l'orchestrateur global
+system = OperationalCognitiveOrchestrator()
+loop = asyncio.get_event_loop()
 
-if __name__ == "__main__":
-    print(hello())
+class UserInput(BaseModel):
+    text: str
+
+@app.post("/talk")
+async def talk_to_engine(user_input: UserInput):
+    result = await system.process_humanized_experience(
+        {"input_text": user_input.text}
+    )
+    return {
+        "response": result["decision"]["parameters"]["text"],
+        "emotion": result["emotional_state"],
+        "safety": result["safety_check"]
+    }
+
+@app.get("/")
+def home():
+    return {"status": "MTI Engine is running 🚀"}
