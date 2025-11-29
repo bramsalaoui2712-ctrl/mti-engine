@@ -1,0 +1,8 @@
+numpy
+torch
+transformers
+faiss-cpu
+sqlite3-binary
+requests
+uvicorn
+fastapi
