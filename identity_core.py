@@ -1,64 +1,92 @@
 # identity_core.py
+import numpy as np
 from datetime import datetime
 
 class IdentityCore:
     """
-    Noyau d'identité pour MTI.
-    Contient les valeurs, préférences et style de réponse.
+    Noyau identitaire simple et propre.
+    Donne personnalité, style de communication et valeurs internes.
     """
 
     def __init__(self):
+        # Traits constants (0 à 1)
         self.personality = {
-            "openness": 0.8,
-            "conscientiousness": 0.7,
-            "extraversion": 0.4,
-            "agreeableness": 0.6,
-            "stability": 0.65
+            "warmth": 0.7,
+            "clarity": 0.8,
+            "directness": 0.55,
+            "humor": 0.35,
+            "formality": 0.50
         }
 
-        self.communication = {
-            "warmth": 0.8,
-            "directness": 0.6,
-            "humor": 0.4,
-            "formality": 0.5
-        }
-
+        # Valeurs stabilisatrices
         self.values = {
             "honesty": 0.9,
+            "non_harm": 1.0,
             "usefulness": 0.85,
-            "calm": 0.8,
-            "clarity": 0.9
+            "respect": 0.95
         }
 
+        # Historique minimal
         self.history = []
-        self.created_at = datetime.now()
 
-    def style_message(self, raw_text: str) -> str:
+    # ---------------------------------------
+    # STYLE DE COMMUNICATION
+    # ---------------------------------------
+    def stylize(self, text: str) -> str:
         """
-        Applique un style d'identité à une réponse brute.
-        Ici on fait simple et stable.
+        Modifie légèrement la réponse brute pour refléter la personnalité.
         """
-        if self.communication["warmth"] > 0.6:
-            raw_text = "Je comprends. " + raw_text
+        t = text.strip()
 
-        if self.communication["humor"] > 0.3:
-            raw_text = raw_text + " 🙂"
+        # chaleur
+        if self.personality["warmth"] > 0.6:
+            t = "Je comprends. " + t
 
-        return raw_text
+        # humour discret
+        if self.personality["humor"] > 0.3:
+            if len(t) > 30:
+                t += " 😉"
 
-    def record_experience(self, text: str, emotional_state: dict):
-        """Stocke une mini trace autobiographique."""
+        # clarté
+        if self.personality["clarity"] > 0.7:
+            t = t.replace("je crois", "je pense clairement que")
+            t = t.replace("peut-être", "probablement")
+
+        # directivité
+        if self.personality["directness"] > 0.5:
+            t = t.replace("je pense que", "voici ce qu'il faut retenir :")
+
+        return t
+
+    # ---------------------------------------
+    # ALIGNEMENT AVEC LES VALEURS
+    # ---------------------------------------
+    def enforce_values(self, text: str) -> str:
+        """
+        Corrige la réponse si elle viole les valeurs internes.
+        """
+        if self.values["non_harm"] > 0.9:
+            forbidden = ["tuer", "blesser", "détester"]
+            for f in forbidden:
+                if f in text.lower():
+                    text = text.replace(f, "[contenu filtré]")
+
+        return text
+
+    # ---------------------------------------
+    # COHÉRENCE IDENTITAIRE
+    # ---------------------------------------
+    def apply(self, raw_text: str) -> str:
+        """
+        Pipeline complet : stylisation + valeurs + cohérence.
+        """
+        text = self.stylize(raw_text)
+        text = self.enforce_values(text)
+
         self.history.append({
-            "time": datetime.now(),
-            "text": text[:120],
-            "emo": emotional_state
+            "time": datetime.now().isoformat(),
+            "raw": raw_text,
+            "final": text
         })
 
-    def export_identity(self):
-        """Pour de l’API future."""
-        return {
-            "personality": self.personality,
-            "communication": self.communication,
-            "values": self.values,
-            "timeline_length": len(self.history)
-        }
+        return text
